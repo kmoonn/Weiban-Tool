@@ -1,6 +1,18 @@
 import requests
 import json
 
+# ==================================================================
+
+tenantCode = 43000010  # 学校 Code
+userId = ''  # 用户ID
+x_token = ''  # token
+examPlanId = '89dfa27d-c048-4374-841a-d2d9010d73e1'  # 考试项目ID
+userExamId = '' # 历史考试ID
+userExamPlanId = ''  # 本次考试ID
+final_run = False  # 是否最终提交
+
+# ==================================================================
+
 # 随手写的 目前只针对2024版
 # examPlanId: "b56e5bfe-d0eb-446b-8cfe-e87da2608c75" 考试项目ID
 # 'userExamPlanId': '620145a3-468b-4a65-bc73-4e484e3cfad2' 进入考试一个ID
@@ -8,12 +20,6 @@ import json
 
 # 考过一遍 题库固定 每个人题目不一样 但是考过一次就固定 每天题目不一样（目前暂时发现的机制）
 # 所以运行两遍即可怕程序一键满分
-
-# 运行之前一定填写好下面的参数
-userId = ''  #用户ID
-tenantCode = 0  # 学校Code
-x_token = '' #校验
-userExamPlanId = '' # 开始考试后当前考试ID
 
 headers = {
     'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
@@ -55,7 +61,7 @@ def get_questions_answers():
     data = {
         'tenantCode': f'{tenantCode}',
         'userId': f'{userId}',
-        'userExamId': '8b3a6946-a1d6-4035-9bcf-db269dab677d',
+        'userExamId': f'{userExamId}',
         'isRetake': 2
     }
 
@@ -119,7 +125,7 @@ def recordQuestion(questionId, answerIds):
         'useTime': 3600,
         'answerIds': f'{answerIds}',
 
-        'examPlanId': 'b56e5bfe-d0eb-446b-8cfe-e87da2608c75'
+        'examPlanId': examPlanId
     }
 
     r = requests.post(url, data=data, headers=headers)
@@ -153,11 +159,13 @@ if __name__ == '__main__':
 
     questions = get_questions_List()
 
-    print(len(set(questions_answers.keys()) & set(questions))) # 题库有答案数量
+    print(f"答案获取比例: {len(set(questions_answers.keys()) & set(questions))}/{len(questions)}")  # 题库有答案数量
+    print("请确保比例为100%再正式运行")
 
-    # for question in questions:
-    #     if question not in questions_answers:
-    #         continue
-    #     recordQuestion(question, ','.join(questions_answers[question]))
-    #
-    # submit()
+    if final_run:
+        for question in questions:
+            if question not in questions_answers:
+                continue
+            recordQuestion(question, ','.join(questions_answers[question]))
+
+        submit()
